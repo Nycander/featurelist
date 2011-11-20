@@ -24,7 +24,7 @@ public class CarTest {
 }
 ```
 
-Then, by running a JUnit test run with the FeatureListCompiler added to the list of Listeners, example: `junitcore.addListener(new FeatureListCompiler());`.
+Then, by running a JUnit test run with the FeatureListCompiler added to the list of Listeners, example: `junitcore.addListener(new FeatureListCompiler());`. Well, assuming the test actually succeded.
 
 ```
 Feature list 2011-nov-20
