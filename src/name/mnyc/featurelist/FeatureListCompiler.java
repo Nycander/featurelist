@@ -15,15 +15,32 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import junit.framework.TestSuite;
-
 import org.junit.runner.Description;
-import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 /**
+ * Example usage:
+ * 
+ * <pre>
+ * public static final void main(String... args) throws Exception
+ * {
+ * 	TestSuite suite = new TestSuite();
+ * 	
+ * 	for (int i = 0; i &lt; args.length; i++)
+ * 	{
+ * 		DirectoryTestSuiteBuilder builder = new DirectoryTestSuiteBuilder(args[i]);
+ * 		suite.addTest(builder.getTestSuite());
+ * 	}
+ * 	
+ * 	JUnitCore core = new JUnitCore();
+ * 	core.addListener(new FeatureListCompiler());
+ * 	core.run(suite);
+ * 	System.exit(0);
+ * }
+ * </pre>
+ * 
  * @author Martin Nycander (martin.nycander@gmail.com)
  */
 public class FeatureListCompiler extends RunListener
@@ -114,7 +131,7 @@ public class FeatureListCompiler extends RunListener
 		{
 			printFeatures("Broken features ", '!', FeatureType.BROKEN);
 		}
-
+		out.flush();
 		super.testRunFinished(result);
 	}
 
@@ -221,19 +238,5 @@ public class FeatureListCompiler extends RunListener
 			sb.append('\n');
 		}
 		return sb.toString();
-	}
-
-	public static final void main(String... args) throws Exception
-	{
-		TestSuite suite;
-		DirectoryTestSuiteBuilder builder = new DirectoryTestSuiteBuilder("test.unit/");
-		suite = builder.getTestSuite();
-		builder = new DirectoryTestSuiteBuilder("test.integration/");
-		suite.addTest(builder.getTestSuite());
-
-		JUnitCore core = new JUnitCore();
-		core.addListener(new FeatureListCompiler());
-		core.run(suite);
-		System.exit(0);
 	}
 }

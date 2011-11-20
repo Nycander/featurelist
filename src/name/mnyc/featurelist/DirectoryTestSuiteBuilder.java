@@ -26,9 +26,11 @@ public class DirectoryTestSuiteBuilder
 	 */
 	public DirectoryTestSuiteBuilder(String rootPath) throws IOException
 	{
-		rootPath = rootPath.replace("\\", "/"); // Normalize path delimiters.
-		if (!rootPath.endsWith("/"))
-			rootPath += "/";
+		// Normalize path delimiters.
+		rootPath = rootPath.replace("\\", "" + File.separator);
+		rootPath = rootPath.replace("/", "" + File.separator);
+		if (rootPath.charAt(rootPath.length() - 1) != File.separatorChar)
+			rootPath += File.separator;
 
 		this.rootPath = rootPath;
 
@@ -47,7 +49,7 @@ public class DirectoryTestSuiteBuilder
 	{
 		for (final String fileName : folder.list())
 		{
-			final File file = new File(folder.getPath() + "/" + fileName);
+			final File file = new File(folder.getPath() + File.separator + fileName);
 			if (file.isDirectory())
 			{
 				findTests(testSuite, file);
@@ -112,7 +114,8 @@ public class DirectoryTestSuiteBuilder
 	 */
 	private String makeClassName(final File testFile)
 	{
-		return testFile.getPath().replace(rootPath, "").replace("/", ".").replace(".java", "");
+		return testFile.getPath().replace(rootPath, "").replace(File.separator, ".")
+				.replace(".java", "");
 	}
 
 	/**
