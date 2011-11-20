@@ -1,4 +1,4 @@
-Feature list compiler
+Feature List Compiler
 =====================
 
 For projects using strict TDD will have a test for every feature. Not every test will reflect one feature (many JUnit tests won't) but some will or a collection of tests will. Projects with this feature can use this utility to mark up what test case tests what feature, and then by using JUnit we can compile a feature list by seeing what features have successful tests.
