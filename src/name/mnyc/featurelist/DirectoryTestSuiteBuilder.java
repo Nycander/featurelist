@@ -18,7 +18,13 @@ public class DirectoryTestSuiteBuilder
 	private String rootPath;
 	private TestSuite testSuite;
 	
-	public DirectoryTestSuiteBuilder(String rootPath) throws IOException, ClassNotFoundException
+	/**
+	 * @param rootPath
+	 *            the root directory which contains all the tests which is included in the suite.
+	 * @throws IOException
+	 *             if a file could not be found. Probably indicates an incorrect rootPath.
+	 */
+	public DirectoryTestSuiteBuilder(String rootPath) throws IOException
 	{
 		if (!rootPath.endsWith("/"))
 			rootPath += "/";
@@ -35,10 +41,8 @@ public class DirectoryTestSuiteBuilder
 	 * @param testSuite
 	 * @param folder
 	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
-	private void findTests(final TestSuite testSuite, final File folder) throws IOException,
-			ClassNotFoundException
+	private void findTests(final TestSuite testSuite, final File folder) throws IOException
 	{
 		for (final String fileName : folder.list())
 		{
@@ -73,7 +77,6 @@ public class DirectoryTestSuiteBuilder
 	 *             is thrown if the test class could not be loaded.
 	 */
 	private void addTest(final TestSuite testSuite, final File testFile)
-			throws ClassNotFoundException
 	{
 		final String className = makeClassName(testFile);
 		final Class<?> testClass = makeClass(className);
