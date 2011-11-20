@@ -26,6 +26,7 @@ public class DirectoryTestSuiteBuilder
 	 */
 	public DirectoryTestSuiteBuilder(String rootPath) throws IOException
 	{
+		rootPath = rootPath.replace("\\", "/"); // Normalize path delimiters.
 		if (!rootPath.endsWith("/"))
 			rootPath += "/";
 
@@ -111,8 +112,7 @@ public class DirectoryTestSuiteBuilder
 	 */
 	private String makeClassName(final File testFile)
 	{
-		return testFile.getPath().replace(rootPath, "").replace("/", ".").replace("\\", ".")
-				.replace(".java", "");
+		return testFile.getPath().replace(rootPath, "").replace("/", ".").replace(".java", "");
 	}
 
 	/**
