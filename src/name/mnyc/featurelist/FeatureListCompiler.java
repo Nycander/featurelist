@@ -3,6 +3,7 @@
  */
 package name.mnyc.featurelist;
 
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,12 +25,12 @@ import org.junit.runner.notification.RunListener;
 
 /**
  * @author Martin Nycander (martin.nycander@gmail.com)
- * 
  */
 public class FeatureListCompiler extends RunListener
 {
 	private Map<String, List<String>> features = new TreeMap<String, List<String>>();
 	private Set<String> fails = new HashSet<String>();
+	private final PrintWriter out;
 	
 	// Will not utilize serialization
 	@SuppressWarnings("serial")
@@ -46,9 +47,20 @@ public class FeatureListCompiler extends RunListener
 
 	public FeatureListCompiler()
 	{
-		super();
+		this(new PrintWriter(System.out));
 	}
 	
+	public FeatureListCompiler(PrintWriter out)
+	{
+		super();
+		this.out = out;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.junit.runner.notification.RunListener#testFinished(org.junit.runner.Description)
+	 */
 	@Override
 	public void testFinished(Description description) throws Exception
 	{
@@ -67,6 +79,12 @@ public class FeatureListCompiler extends RunListener
 		super.testFinished(description);
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.junit.runner.notification.RunListener#testFailure(org.junit.runner.notification.Failure)
+	 */
 	@Override
 	public void testFailure(Failure failure) throws Exception
 	{
@@ -79,94 +97,130 @@ public class FeatureListCompiler extends RunListener
 		super.testFailure(failure);
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.junit.runner.notification.RunListener#testRunFinished(org.junit.runner.Result)
+	 */
 	@Override
 	public void testRunFinished(Result result) throws Exception
 	{
 		String title = "Feature list "
 				+ DateFormat.getDateInstance().format(Calendar.getInstance().getTime());
 		
-		printFeatures(title, '+');
+		printFeatures(title, '+', FeatureType.WORKING);
 		
 		if (fails.size() > 0)
 		{
-			printBrokenFeatures("Broken features ", '!');
+			printFeatures("Broken features ", '!', FeatureType.BROKEN);
 		}
 
 		super.testRunFinished(result);
 	}
 
-	private void printFeatures(String title, char bulletPoint)
+	/**
+	 * Prints working features.
+	 * 
+	 * @param title
+	 *            the headline for the feature set
+	 * @param bulletPoint
+	 *            the type of bullet point to use in the list
+	 */
+	private void printFeatures(final String title, final char bulletPoint, FeatureType featureType)
 	{
-		System.out.println(title);
+		out.println(title);
 		for (int i = 0; i < title.length(); i++)
-			System.out.print('=');
-		System.out.println();
+			out.print('=');
+		out.println();
 
-		for (String category : features.keySet())
+		for (final String category : features.keySet())
 		{
 			if (features.get(category).size() == 0)
 				continue;
 
-			StringBuilder sb = new StringBuilder();
-			for (String feature : features.get(category))
+			final String features;
+			switch (featureType)
 			{
-				boolean testFailed = fails.contains(category + ": " + feature);
-				
-				if (testFailed)
-					continue;
-				
-				sb.append(' ');
-				sb.append(bulletPoint);
-				sb.append(' ');
-				sb.append(feature);
-				sb.append('\n');
+				case BROKEN:
+					features = brokenFeaturesInCategory(bulletPoint, category);
+					break;
+				case WORKING:
+					features = featuresInCategory(bulletPoint, category);
+					break;
+				default:
+					features = "";
+					break;
 			}
-			if (sb.length() > 0)
+			
+			if (features.length() > 0)
 			{
-				System.out.println(category);
-				System.out.println(sb);
+				out.println(category);
+				out.println(features);
 			}
 		}
 	}
 
-	private void printBrokenFeatures(String title, char bulletPoint)
+	/**
+	 * Build a list of features.
+	 * 
+	 * @param bulletPoint
+	 *            the type of bullet point to use in the list.
+	 * @param category
+	 *            the category to print features from.
+	 * @return the compiled list.
+	 */
+	private String featuresInCategory(final char bulletPoint, final String category)
 	{
-		System.out.println(title);
-		for (int i = 0; i < title.length(); i++)
-			System.out.print('=');
-		System.out.println();
-		
-		for (String category : features.keySet())
+		final StringBuilder sb = new StringBuilder();
+		for (final String feature : features.get(category))
 		{
-			if (features.get(category).size() == 0)
+			boolean testFailed = fails.contains(category + ": " + feature);
+			
+			if (testFailed)
 				continue;
 			
-			StringBuilder sb = new StringBuilder();
-			for (String feature : features.get(category))
-			{
-				boolean testFailed = fails.contains(category + ": " + feature);
-				
-				if (!testFailed)
-					continue;
-				
-				sb.append(' ');
-				sb.append(bulletPoint);
-				sb.append(' ');
-				
-				String brokenFeature = feature;
-				for (Entry<String, String> entry : negationReplacement.entrySet())
-				{
-					brokenFeature = brokenFeature.replace(entry.getKey(), entry.getValue());
-				}
-				sb.append(brokenFeature);
-				sb.append('\n');
-			}
-			if (sb.length() > 0)
-			{
-				System.out.println(category);
-				System.out.println(sb);
-			}
+			sb.append(' ');
+			sb.append(bulletPoint);
+			sb.append(' ');
+			sb.append(feature);
+			sb.append('\n');
 		}
+		return sb.toString();
+	}
+
+	/**
+	 * Build a list of broken features. An attempt is made to negate any feature string, example:
+	 * "supports JSON objects" -> "does not support JSON objects"
+	 * 
+	 * @param bulletPoint
+	 *            the type of bullet point to use in the list.
+	 * @param category
+	 *            the category to print features from.
+	 * @return the compiled list.
+	 */
+	private String brokenFeaturesInCategory(char bulletPoint, final String category)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (final String feature : features.get(category))
+		{
+			boolean testFailed = fails.contains(category + ": " + feature);
+			
+			if (!testFailed)
+				continue;
+			
+			sb.append(' ');
+			sb.append(bulletPoint);
+			sb.append(' ');
+			
+			String brokenFeature = feature;
+			for (Entry<String, String> entry : negationReplacement.entrySet())
+			{
+				brokenFeature = brokenFeature.replace(entry.getKey(), entry.getValue());
+			}
+			sb.append(brokenFeature);
+			sb.append('\n');
+		}
+		return sb.toString();
 	}
 
 	public static final void main(String... args) throws Exception
