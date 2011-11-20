@@ -7,6 +7,8 @@ import junit.framework.JUnit4TestAdapter;
 import junit.framework.TestSuite;
 
 /**
+ * A helper class which builds a test suite from a given directory.
+ * 
  * @author Paul McKenzie (http://stackoverflow.com/users/135624/paul-mckenzie)
  * @author Martin Nycander (martin.nycander@gmail.com)
  */
@@ -27,6 +29,14 @@ public class DirectoryTestSuiteBuilder
 		findTests(testSuite, new File(rootPath));
 	}
 	
+	/**
+	 * Recursively search for tests.
+	 * 
+	 * @param testSuite
+	 * @param folder
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	private void findTests(final TestSuite testSuite, final File folder) throws IOException,
 			ClassNotFoundException
 	{
@@ -44,30 +54,67 @@ public class DirectoryTestSuiteBuilder
 		}
 	}
 	
+	/**
+	 * @return true if the file is a test file
+	 */
 	private boolean isTest(final File f)
 	{
 		return f.isFile() && f.getName().endsWith("Test.java");
 	}
 	
-	private void addTest(final TestSuite testSuite, final File f)
+	/**
+	 * Adds a test to the resulting test suite
+	 * 
+	 * @param testSuite
+	 *            the test suite to add
+	 * @param testFile
+	 *            the file containing the test
+	 * @throws ClassNotFoundException
+	 *             is thrown if the test class could not be loaded.
+	 */
+	private void addTest(final TestSuite testSuite, final File testFile)
 			throws ClassNotFoundException
 	{
-		final String className = makeClassName(f);
+		final String className = makeClassName(testFile);
 		final Class<?> testClass = makeClass(className);
 		testSuite.addTest(new JUnit4TestAdapter(testClass));
 	}
 	
-	private Class<?> makeClass(final String className) throws ClassNotFoundException
+	/**
+	 * Attempts to load a class.
+	 * 
+	 * @param className
+	 *            the name of the class
+	 * @return a class object representing the class
+	 */
+	private Class<?> makeClass(final String className)
 	{
-		return (classLoader.loadClass(className));
+		try
+		{
+			return (classLoader.loadClass(className));
+		}
+		catch (ClassNotFoundException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 	
-	private String makeClassName(final File f)
+	/**
+	 * Constructs a class name from a file.
+	 * 
+	 * @param testFile
+	 *            a file representing the test case
+	 * @return a string with the class name
+	 */
+	private String makeClassName(final File testFile)
 	{
-		return f.getPath().replace(rootPath, "").replace("/", ".").replace("\\", ".")
+		return testFile.getPath().replace(rootPath, "").replace("/", ".").replace("\\", ".")
 				.replace(".java", "");
 	}
 
+	/**
+	 * @return the built test suite
+	 */
 	public TestSuite getTestSuite()
 	{
 		return testSuite;
